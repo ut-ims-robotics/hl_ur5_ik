@@ -13,8 +13,18 @@ Package to visualize ik of ur5 in Hololens2
 3. Extract the repo zip in desired folder.
 4. Open Unity Hub, click "ADD", find the MirrorLabs_HL2 folder and click "Open"
 5. Download the desired version of unity by clicking the sign and following the "INSTALL" button.
+
+![](/doc_images/version_install.png)
+
+![](/doc_images/version_install_2.png)
+
+![](/doc_images/version_install_3.png)
+
 6. Open the project
 7. In project open the scene called "ML_UniversalRobotic_ur5"
+
+![](/doc_images/scene.png)
+
 8. Save it as a new scene and name it the way you see fit.
 
 ![](/doc_images/copy_scene.png)
