@@ -35,7 +35,7 @@ Package to visualize ik of ur5 in Hololens2
 
 10. In RocConnectors/ur5 add script called "PoseStampedPublisher.cs" and assign the created sphre to the "Published Transform" field.
 
-11. Open the script and modify 2 line to look like in the following screenshot:
+11. Open the script and modify 2 lines to look like in the following screenshot:
 
 ![](/doc_images/script_modif.png)
 
