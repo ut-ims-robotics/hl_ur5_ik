@@ -2,7 +2,7 @@
 Package to visualize ik of ur5 in Hololens2
 
 
-## Unity Setup
+## Unity Setup To Work with ROS package
 1. Download and install [Unity Hub](https://unity3d.com/get-unity/download) and [Visual Studio Community](https://visualstudio.microsoft.com/).
 
 ![](/doc_images/unity_download.png)
