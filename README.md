@@ -9,7 +9,7 @@ Package to visualize ik of ur5 in Hololens2
 
 ![](/doc_images/vs_download.png)
 
-2. Download the following [repo (link will be soon)](https://data.4tu.nl/articles/software/Framework_for_the_publication_MirrorLabs_creating_similar_learning_environments_for_students_all_over_Europe_for_human-robot_coproduction/14186807).
+2. Download the following [repo](https://data.4tu.nl/articles/software/Framework_for_the_publication_MirrorLabs_creating_similar_learning_environments_for_students_all_over_Europe_for_human-robot_coproduction/14186807).
 3. Extract the repo zip in desired folder.
 4. Open Unity Hub, click "ADD", find the MirrorLabs_HL2 folder and click "Open"
 5. Download the desired version of unity by clicking the sign and following the "INSTALL" button.
