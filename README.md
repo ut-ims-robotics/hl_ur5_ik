@@ -45,6 +45,9 @@ Package to visualize ik of ur5 in Hololens2
 
 ![](/doc_images/topic_names.png)
 
+13. Make sure that the IP in Ros Connector component is the ip of your ROS machine.
+
+![](/doc_images/ros_ip.png)
 
 ## Setting the project to run on HoloLens
 
@@ -68,7 +71,7 @@ Project is ready to be built for HoloLens2.
 
 ## Building the project for HoloLens
 
-Before building< make sure, that in VisualStudio Installer you have installed the support for UWP development
+Before building, make sure, that in VisualStudio Installer you have installed the support for UWP development
 
 ![](/doc_images/UWP_support.png)
 
@@ -158,14 +161,16 @@ Now:
 
 ## How to run
 
-1. On ROS machine open 3 terminals. In all of the source your workspace.
+1. Make sure, that ROS machine and HoloLens are in the same network.
 
-2. In the first terminal launch rosbridge with `roslaunch rosbridge_server rosbridge_websocket.launch` command.
+2. On ROS machine open 3 terminals. In all of the source your workspace.
 
-3. In the second terminal launch moveit with `roslaunch ur5_moveit_config demo.launch`
+3. In the first terminal launch rosbridge with `roslaunch rosbridge_server rosbridge_websocket.launch` command.
 
-4. In the third run the node with `rosrun hl_ur5_ik ur_ik_request` command
+4. In the second terminal launch moveit with `roslaunch ur5_moveit_config demo.launch`
 
-5. Open the deployed app in Hololens.
+5. In the third run the node with `rosrun hl_ur5_ik ur_ik_request` command
 
-6. Done. You can control the joints of the robot by moving the sphere around.
+6. Open the deployed app in Hololens.
+
+7. Done. You can control the joints of the robot by moving the sphere around.
