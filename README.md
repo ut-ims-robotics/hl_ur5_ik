@@ -112,4 +112,60 @@ Now:
 
 9. Press `Create`.
 
-## Deployment to HoloLens(TODO)
+## Deployment to HoloLens
+
+1. Turn on developer mode on HoloLens to be able to install apps from you PC.
+
+2. Find the IP of HoloLens in the network by going to `network settings` and `advanced options` of connected network.
+
+3. Type the IP in the browser and setup the Device Portal. (Everything there should be self-explanatory)
+
+4. Once the setup is finished, go to the Device Portal the same way through the browser.
+
+![](/doc_images/app_deployment.png)
+
+5. Go to `Views > Apps`.
+
+![](/doc_images/app_deployment2.png)
+
+6. Choose the .appx file, which was created by Visual Studio and saved in the path from building step 8 and 9
+
+![](/doc_images/app_deployment3.png)
+
+7. Tick the box for framework packages and press next
+
+![](/doc_images/app_deployment4.png)
+
+8. Choose the file from `Dependecies/ARM64` folder and press install.
+
+![](/doc_images/app_deployment5.png)
+
+![](/doc_images/app_deployment6.png)
+
+9. Done. If you wrote the correct ip address in Unity and have the ROS part running, everything should work.
+
+## Setting up the ROS part.
+
+1. Install [ROS1](https://www.ros.org/install/)
+
+3. Install Moveit with `sudo apt install ros-$ROS_DISTRO-moveit-ros`
+
+4. Install rosbridge with `sudo apt install ros-$ROS_DISTRO-rosbridge-suite`
+
+5. Clone this package and [Universal Robot package](https://github.com/ros-industrial/universal_robot) into you catkin workspace src folder.
+
+6. Build both packages
+
+## How to run
+
+1. On ROS machine open 3 terminals. In all of the source your workspace.
+
+2. In the first terminal launch rosbridge with `roslaunch rosbridge_server rosbridge_websocket.launch` command.
+
+3. In the second terminal launch moveit with `roslaunch ur5_moveit_config demo.launch`
+
+4. In the third run the node with `rosrun hl_ur5_ik ur_ik_request` command
+
+5. Open the deployed app in Hololens.
+
+6. Done. You can control the joints of the robot by moving the sphere around.
