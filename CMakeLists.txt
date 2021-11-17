@@ -9,6 +9,9 @@ project(hl_ur5_ik)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  moveit_core
+  moveit_ros_planning_interface
+  moveit_msgs
 )
 
 ## System dependencies are found with CMake's conventions
