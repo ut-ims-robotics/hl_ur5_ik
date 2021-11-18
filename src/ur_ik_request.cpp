@@ -12,13 +12,16 @@
 #include <iostream>
 #include "pluginlib/class_loader.h"
 
-#include "moveit/robot_model_loader/robot_model_loader.h"
-#include "moveit/move_group_interface/move_group_interface.h"
-#include "moveit/planning_interface/planning_interface.h"
-#include "moveit/planning_scene_interface/planning_scene_interface.h"
-#include <moveit/kinematic_constraints/utils.h>
+#include <moveit/robot_model_loader/robot_model_loader.h>
+#include <moveit/planning_interface/planning_interface.h>
 #include <moveit/planning_scene/planning_scene.h>
-#include "moveit/trajectory_execution_manager/trajectory_execution_manager.h"
+#include <moveit/kinematic_constraints/utils.h>
+#include <moveit_msgs/DisplayTrajectory.h>
+#include <moveit_msgs/PlanningScene.h>
+#include <moveit_visual_tools/moveit_visual_tools.h>
+
+
+#include <moveit/move_group_interface/move_group_interface.h>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -27,7 +30,7 @@ geometry_msgs::PoseStamped end_effector_pos = geometry_msgs::PoseStamped();
 planning_interface::MotionPlanRequest req;
 planning_interface::MotionPlanResponse res;
 
-static const std::string PLANNING_GROUP = "manipulator";
+
 
 class ik_request
 {
@@ -44,10 +47,13 @@ public:
   ik_request(ros::NodeHandle nh)
   {
     _current_Joint = sensor_msgs::JointState();
+    //_current_Joint.name = {"shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"};
+    //_current_Joint.position = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
     _request_ik.request.ik_request.robot_state.joint_state = _current_Joint;
     _request_ik.request.ik_request.group_name = "manipulator";    
     _request_ik.request.ik_request.pose_stamped = geometry_msgs::PoseStamped();
     _request_ik.request.ik_request.pose_stamped.header.frame_id = "world";
+    _request_ik.request.ik_request.robot_state.is_diff = true;
 
     _request_trajectory.request.motion_plan_request.group_name = "manipulator";
     //_request_trajectory.request.motion_plan_request.start_state.joint_state = _current_Joint;
@@ -61,6 +67,7 @@ public:
   sensor_msgs::JointState IK_compute(geometry_msgs::PoseStamped end_effector_position)
   {
     _request_ik.request.ik_request.pose_stamped = end_effector_position;
+    ROS_INFO_STREAM(_request_ik.request);
     _request_ik.request.ik_request.pose_stamped.header.frame_id = "world";
     if (_client_ik.call(_request_ik))
     {
@@ -68,47 +75,6 @@ public:
       std::cout << _request_ik.response.error_code << std::endl;
     }
     return _request_ik.request.ik_request.robot_state.joint_state;
-  }
-
-  trajectory_msgs::JointTrajectory Trajectory_execute(sensor_msgs::JointState goalState)
-  {
-      //TODO
-      /*
-       * use /plan_kinematic_path service to create a plan(kinda done?) an then execute it.
-       */
-    
-    /*
-    name: 
-  - shoulder_pan_joint
-  - shoulder_lift_joint
-  - elbow_joint
-  - wrist_1_joint
-  - wrist_2_joint
-  - wrist_3_joint
-     */
-    moveit_msgs::Constraints goal;
-
-    int size_of_vector = goalState.name.size();
-
-    for (size_t i = 0; i < size_of_vector; i++)
-    {
-      _goalPosition.joint_name = goalState.name[i];
-      _goalPosition.position = goalState.position[i];
-      _goalPosition.weight = 1;
-      goal.joint_constraints.push_back(_goalPosition);
-    }
-    
-
-
-    _request_trajectory.request.motion_plan_request.goal_constraints.push_back(goal);
-
-    if (_client_trajectory.call(_request_trajectory))
-    {
-      //make the push and execute of trajectoryint size_of_vector = goalState.name.size();
-      std::cout << _request_trajectory.response.motion_plan_response.error_code << std::endl;
-      trajectory_msgs::JointTrajectory traj = _request_trajectory.response.motion_plan_response.trajectory.joint_trajectory;
-      return traj;
-    }
   }
 
 };
@@ -126,9 +92,17 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "ur5_ik");
   ros::NodeHandle _nh;
 
+  static const std::string PLANNING_GROUP = "manipulator";
+
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+
   ros::Publisher joint_pub = _nh.advertise<sensor_msgs::JointState>("query_joint_state", 1);
   ros::Subscriber sub = _nh.subscribe("unity/end_effector_goal", 1000, eeCb);
   ik_request ik_computation = ik_request(_nh);
+
+
+  moveit::planning_interface::MoveGroupInterface move_group_interface(PLANNING_GROUP);
 
   sensor_msgs::JointState joint_to_send = sensor_msgs::JointState();
   ros::Rate loop_rate(10);
@@ -147,7 +121,9 @@ int main(int argc, char **argv)
   std::string planner_plugin_name;
 
 
-  if (!_nh.getParam("planning_plugin", planner_plugin_name))
+  moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+  if (!_nh.getParam("/move_group/planning_plugin", planner_plugin_name))
     ROS_FATAL_STREAM("Could not find planner plugin name");
   try
   {
@@ -178,39 +154,53 @@ int main(int argc, char **argv)
 
   while (ros::ok())
   {
-
     joint_to_send = ik_computation.IK_compute(end_effector_pos);
     joint_pub.publish(joint_to_send);
-    if (end_effector_pos.header.stamp.sec == 1)
+    if (end_effector_pos.header.stamp.sec == 1) //swithc to change in the object to remove the chance for segmetation fault
     {
       //TODO
       /*
        * function to use generated joint states to make a trajectory and execute
        */
+      ROS_INFO_STREAM("time to execute.");
       moveit::core::RobotState goal_state(robot_model);
       std::vector<double> joint_values;
-      for (size_t i = 0; i < joint_to_send.position.size(); i++)
+      
+      // for (size_t i = 0; i < joint_to_send.position.size(); i++)
+      // {
+      //   joint_values.push_back(joint_to_send.position[i]);
+      // }
+      // goal_state.setJointGroupPositions(joint_model_group, joint_values);
+      // moveit_msgs::Constraints joint_goal = kinematic_constraints::constructGoalConstraints(goal_state, joint_model_group);
+      // std::cout << joint_goal << std::endl;
+      // req.goal_constraints.clear();
+      // req.group_name = PLANNING_GROUP;
+      // req.goal_constraints.push_back(joint_goal);
+      // planning_interface::PlanningContextPtr context =
+      //     planner_instance->getPlanningContext(planning_scene, req, res.error_code_); //error here
+      // /* Call the Planner */
+      // context->solve(res);
+      // /* Check that the planning was successful */
+      // if (res.error_code_.val != res.error_code_.SUCCESS)
+      // {
+      //   ROS_ERROR("Could not compute plan successfully");
+      //   return 0;
+      // }
+      
+      moveit::core::RobotStatePtr current_state = move_group_interface.getCurrentState();
+      std::vector<double> joint_group_positions;
+      current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
+
+      joint_group_positions = joint_to_send.position;
+
+      bool success = (move_group_interface.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+      if (success)
       {
-        joint_values.push_back(joint_to_send.position[i]);
+          move_group_interface.execute(my_plan);
       }
-      goal_state.setJointGroupPositions(joint_model_group, joint_values);
-      moveit_msgs::Constraints joint_goal = kinematic_constraints::constructGoalConstraints(goal_state, joint_model_group);
-      req.goal_constraints.clear();
-      req.goal_constraints.push_back(joint_goal);
-      planning_interface::PlanningContextPtr context =
-          planner_instance->getPlanningContext(planning_scene, req, res.error_code_);
-      context = planner_instance->getPlanningContext(planning_scene, req, res.error_code_);
-      /* Call the Planner */
-      context->solve(res);
-      /* Check that the planning was successful */
-      if (res.error_code_.val != res.error_code_.SUCCESS)
-      {
-        ROS_ERROR("Could not compute plan successfully");
-        return 0;
-      }
+      cre
     }
     loop_rate.sleep();
-    ros::spinOnce();
   }
   
 
