@@ -67,7 +67,7 @@ public:
   sensor_msgs::JointState IK_compute(geometry_msgs::PoseStamped end_effector_position)
   {
     _request_ik.request.ik_request.pose_stamped = end_effector_position;
-    ROS_INFO_STREAM(_request_ik.request);
+    //ROS_INFO_STREAM(_request_ik.request);
     _request_ik.request.ik_request.pose_stamped.header.frame_id = "world";
     if (_client_ik.call(_request_ik))
     {
@@ -156,13 +156,14 @@ int main(int argc, char **argv)
   {
     joint_to_send = ik_computation.IK_compute(end_effector_pos);
     joint_pub.publish(joint_to_send);
-    if (end_effector_pos.header.stamp.sec == 1) //swithc to change in the object to remove the chance for segmetation fault
+    if (end_effector_pos.header.stamp.sec == 1) //switch to change in the object to remove the chance for segmetation fault
     {
       //TODO
       /*
        * function to use generated joint states to make a trajectory and execute
        */
       ROS_INFO_STREAM("time to execute.");
+      ROS_INFO_STREAM(joint_to_send);
       moveit::core::RobotState goal_state(robot_model);
       std::vector<double> joint_values;
       
@@ -192,13 +193,13 @@ int main(int argc, char **argv)
       current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
 
       joint_group_positions = joint_to_send.position;
+      move_group_interface.setJointValueTarget(joint_group_positions);  
 
       bool success = (move_group_interface.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
       if (success)
       {
           move_group_interface.execute(my_plan);
       }
-      cre
     }
     loop_rate.sleep();
   }
